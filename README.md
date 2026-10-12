@@ -8,9 +8,9 @@ Demo académica de una fila de atención con backend Flask y frontend Angular. L
 - Asignar el siguiente turno a cualquiera de las cuatro ventanillas disponibles.
 - Marcar una ventanilla como ocupada durante la atención y liberarla al finalizar.
 - Mostrar la fila y el turno llamado en una pantalla que se actualiza cada 2.5 segundos.
-- Ofrecer una vista para clientes (`/?vista=cliente`) con mesas disponibles, turno llamado y espera estimada, y una vista de operación (`/?vista=operador`) con la ocupación de cada mesa y controles para llamar o finalizar turnos.
+- Mostrar en una sola vista el turno llamado y su mesa asignada, la disponibilidad y ocupación de las cuatro mesas, la fila de espera, las esperas estimadas y los controles para llamar o finalizar turnos.
 - Calcular la espera estimada usando un promedio inicial de 8 minutos por atención; el valor se puede ajustar en `frontend/src/app/app.ts`.
-- Reproducir un tono al llamar un turno y cuando una mesa queda disponible (el navegador puede requerir una primera interacción para habilitar sonido).
+- Reproducir un tono cuando se llama a un turno (el navegador puede requerir una primera interacción para habilitar sonido).
 
 ## Ejecutar en local
 
