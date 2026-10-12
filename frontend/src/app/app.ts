@@ -79,7 +79,7 @@ export class AppComponent implements OnInit, OnDestroy {
   finish(counter: Counter): void {
     this.busyAction = true;
     this.queue.finish(counter.id).subscribe({
-      next: value => { this.dashboard = value; this.notice = `${counter.name} está disponible.`; this.busyAction = false; },
+      next: value => { this.dashboard = value; this.playChime(); this.notice = `${counter.name} está disponible. Pase el siguiente turno.`; this.busyAction = false; },
       error: error => { this.notice = error.error?.error ?? 'No se pudo cerrar la atención.'; this.busyAction = false; },
     });
   }
