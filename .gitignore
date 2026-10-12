@@ -1,0 +1,9 @@
+node_modules/
+frontend/dist/
+__pycache__/
+.venv/
+.vercel/
+*.db
+*.sqlite3
+.env
+.angular/
