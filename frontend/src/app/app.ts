@@ -16,6 +16,7 @@ export class AppComponent implements OnInit, OnDestroy {
   busyAction = false;
   notice = '';
   now = new Date();
+  view: 'cliente' | 'mesas' = 'cliente';
   private pollId?: number;
   private clockId?: number;
   private lastCalled = '';
@@ -33,6 +34,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.view = new URLSearchParams(window.location.search).get('vista') === 'mesas' ? 'mesas' : 'cliente';
     this.refresh();
     this.pollId = window.setInterval(() => this.refresh(), 2500);
     this.clockId = window.setInterval(() => this.now = new Date(), 30_000);
@@ -62,7 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
   createTicket(): void {
     this.busyAction = true;
     this.queue.createTicket().subscribe({
-      next: ticket => { this.notice = `Tu turno ${ticket.code} está listo.`; this.busyAction = false; this.refresh(); },
+      next: ticket => { this.notice = ticket.status === 'serving' ? `Tu turno ${ticket.code}. Pase a la mesa ${String(ticket.counter).padStart(2, '0')}.` : `Tu turno ${ticket.code} está en espera. Te avisaremos cuando se asigne una mesa.`; if (ticket.status === 'serving') this.playChime(); this.busyAction = false; this.refresh(); },
       error: error => { this.notice = error.error?.error ?? 'No se pudo generar el turno.'; this.busyAction = false; },
     });
   }
@@ -78,7 +80,7 @@ export class AppComponent implements OnInit, OnDestroy {
   finish(counter: Counter): void {
     this.busyAction = true;
     this.queue.finish(counter.id).subscribe({
-      next: value => { this.dashboard = value; this.playChime(); this.notice = `Mesa ${counter.id} está disponible.${value.nextTicket ? ` Pase el siguiente turno: ${value.nextTicket.code}.` : ' No hay turnos en espera.'}`; this.busyAction = false; },
+      next: value => { this.dashboard = value; this.playChime(); const assigned = value.counters.find(item => item.id === counter.id)?.ticket; this.notice = assigned ? `Mesa ${counter.id}: pase ${assigned.code}.` : `Mesa ${counter.id} está disponible. No hay turnos en espera.`; this.busyAction = false; },
       error: error => { this.notice = error.error?.error ?? 'No se pudo cerrar la atención.'; this.busyAction = false; },
     });
   }
