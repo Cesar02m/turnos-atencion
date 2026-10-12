@@ -1,47 +1,25 @@
 <div class="app-shell">
   <header class="topbar">
     <a class="brand" href="/" aria-label="Turnos, inicio"><span class="brand-mark">t</span><span>turnos<span class="brand-dot">.</span></span></a>
+    <nav class="view-switch" aria-label="Vistas"><a href="/?vista=cliente" [class.active-view]="view === 'cliente'">Pantalla pública</a><a href="/?vista=mesas" [class.active-view]="view === 'mesas'">Atención en mesas</a></nav>
     <div class="topbar-right"><span class="live-dot"></span><span>Sucursal Centro</span><span class="divider"></span><span class="today">{{ now | date:'EEEE, d MMMM':'':'es-MX' }}</span></div>
   </header>
-
   <main>
-    <section class="welcome">
-      <div><div class="eyebrow"><span class="eyebrow-line"></span> ATENCIÓN A CLIENTES</div><h1>Turnos y mesas<br><span>en vivo.</span></h1><p>Consulta tu turno, la mesa asignada y quién está siendo atendido en cada mesa.</p></div>
-      <div class="welcome-meta"><span class="clock">{{ now | date:'HH:mm' }}</span><span>hora local</span></div>
-    </section>
-
-    <section class="overview" aria-label="Resumen de atención">
-      <div class="overview-item"><span class="overview-icon icon-blue">↗</span><div><span class="metric-label">EN ESPERA</span><strong>{{ dashboard.stats.waiting | number:'2.0' }}</strong></div></div>
-      <div class="overview-item"><span class="overview-icon icon-green">✓</span><div><span class="metric-label">ATENDIDOS HOY</span><strong>{{ dashboard.stats.served | number:'2.0' }}</strong></div></div>
-      <div class="overview-item"><span class="overview-icon icon-amber">◷</span><div><span class="metric-label">MESAS DISPONIBLES</span><strong>{{ dashboard.stats.available }}<small> / 04</small></strong></div></div>
-      <div class="overview-status"><span class="status-pulse"></span><div><strong>Servicio activo</strong><span>Actualización automática</span></div></div>
-    </section>
-
-    <article class="display-card">
-      <div class="display-top"><span class="display-label">ÚLTIMO TURNO LLAMADO</span><span class="display-live"><i></i> EN VIVO</span></div>
-      <div class="display-body"><div class="display-ticket">{{ currentCall?.code || '— — —' }}</div><div class="display-counter" *ngIf="currentCall"><span class="counter-symbol">↗</span><span>Pase a <strong>{{ counterFor(currentCall) }}</strong></span></div><div class="display-empty" *ngIf="!currentCall">Pronto llamaremos al siguiente turno</div></div>
-      <div class="display-bottom"><span><span class="display-dot"></span> {{ currentCall ? 'Dirígete a la mesa indicada' : 'Esperando próximo turno' }}</span><span>{{ now | date:'HH:mm:ss' }}</span></div>
-    </article>
-
-    <div class="section-heading unified-heading"><div><div class="eyebrow">ESTADO EN VIVO</div><h2>Disponibilidad y atención por mesa</h2></div><span class="updated">Estimado: {{ averageServiceMinutes }} min por atención</span></div>
-    <section class="operator-counter-grid unified-counter-grid" aria-label="Estado, turno atendido y disponibilidad de cada mesa">
-      <article class="operator-counter" *ngFor="let counter of dashboard.counters" [class.operator-counter-busy]="counter.status === 'busy'">
-        <div class="counter-head"><span class="counter-number">MESA {{ counter.id | number:'2.0' }}</span><span class="availability" [class.available]="counter.status === 'available'"><i></i>{{ counter.status === 'available' ? 'Disponible' : 'Ocupada' }}</span></div>
-        <div class="operator-ticket-label">{{ counter.ticket ? 'ATENDIENDO EL TURNO' : 'LISTA PARA ATENDER' }}</div>
-        <strong class="operator-ticket">{{ counter.ticket?.code || '—' }}</strong>
-        <div class="operator-eta">{{ counter.status === 'busy' ? 'Espera aproximada para esta mesa' : 'Espera estimada para esta mesa' }} <strong>{{ estimatedWait(counter) === 0 ? 'Sin espera' : '≈ ' + estimatedWait(counter) + ' min' }}</strong></div>
-        <button class="counter-action" *ngIf="counter.status === 'available'" (click)="callNext(counter)" [disabled]="busyAction || !waitingTickets.length"><span>›</span> Llamar siguiente turno</button>
-        <button class="counter-action finish-action" *ngIf="counter.status === 'busy'" (click)="finish(counter)" [disabled]="busyAction"><span>✓</span> Finalizar atención</button>
-      </article>
-    </section>
-
-    <section class="unified-bottom">
-      <aside class="customer-actions"><div><strong>¿Aún no tienes turno?</strong><span>Genera uno y espera a que aparezca en pantalla.</span></div><button class="primary-button" (click)="createTicket()" [disabled]="busyAction"><span>Generar turno</span><span class="button-arrow">→</span></button></aside>
+    <section class="welcome"><div><div class="eyebrow"><span class="eyebrow-line"></span> ATENCIÓN A CLIENTES</div><h1>{{ view === 'cliente' ? 'Consulta tu turno' : 'Atención en mesas' }}<br><span>{{ view === 'cliente' ? 'en vivo.' : 'y ventanillas.' }}</span></h1><p>{{ view === 'cliente' ? 'Consulta el turno llamado, la mesa asignada y el estado de atención.' : 'Revisa quién está en cada mesa y finaliza su atención para llamar al siguiente.' }}</p></div><div class="welcome-meta"><span class="clock">{{ now | date:'HH:mm' }}</span><span>hora local</span></div></section>
+    <section class="overview" aria-label="Resumen de atención"><div class="overview-item"><span class="overview-icon icon-blue">↗</span><div><span class="metric-label">EN ESPERA</span><strong>{{ dashboard.stats.waiting | number:'2.0' }}</strong></div></div><div class="overview-item"><span class="overview-icon icon-green">✓</span><div><span class="metric-label">ATENDIDOS HOY</span><strong>{{ dashboard.stats.served | number:'2.0' }}</strong></div></div><div class="overview-item"><span class="overview-icon icon-amber">◷</span><div><span class="metric-label">MESAS DISPONIBLES</span><strong>{{ dashboard.stats.available }}<small> / 04</small></strong></div></div><div class="overview-status"><span class="status-pulse"></span><div><strong>Servicio activo</strong><span>Actualización automática</span></div></div></section>
+    <ng-container *ngIf="view === 'cliente'; else operatorView">
+      <article class="display-card"><div class="display-top"><span class="display-label">ÚLTIMO TURNO LLAMADO</span><span class="display-live"><i></i> EN VIVO</span></div><div class="display-body"><div class="display-ticket">{{ currentCall?.code || '— — —' }}</div><div class="display-counter" *ngIf="currentCall"><span class="counter-symbol">↗</span><span>Pase a <strong>{{ counterFor(currentCall) }}</strong></span></div><div class="display-empty" *ngIf="!currentCall">Pronto llamaremos al siguiente turno</div></div><div class="display-bottom"><span><span class="display-dot"></span> {{ currentCall ? 'Dirígete a la mesa indicada' : 'Esperando próximo turno' }}</span><span>{{ now | date:'HH:mm:ss' }}</span></div></article>
+      <div class="section-heading customer-heading"><div><div class="eyebrow">ESTADO EN VIVO</div><h2>Disponibilidad y turno por mesa</h2></div><span class="updated">Espera estimada: {{ averageServiceMinutes }} min por atención</span></div>
+      <section class="customer-counter-grid" aria-label="Disponibilidad de cada mesa"><article class="customer-counter" *ngFor="let counter of dashboard.counters" [class.customer-counter-busy]="counter.status === 'busy'"><div class="counter-head"><span class="counter-number">MESA {{ counter.id | number:'2.0' }}</span><span class="availability" [class.available]="counter.status === 'available'"><i></i>{{ counter.status === 'available' ? 'Disponible' : 'Ocupada' }}</span></div><strong class="customer-counter-ticket">{{ counter.ticket?.code || '—' }}</strong><span class="customer-counter-caption">{{ counter.ticket ? 'Turno en atención' : 'Lista para el siguiente turno' }}</span><div class="estimated-wait"><span>Espera estimada</span><strong>{{ estimatedWait(counter) === 0 ? 'Sin espera' : '≈ ' + estimatedWait(counter) + ' min' }}</strong></div></article></section>
+      <aside class="customer-actions"><div><strong>¿Aún no tienes turno?</strong><span>Genera uno. Si hay una mesa libre, se te asignará automáticamente.</span></div><button class="primary-button" (click)="createTicket()" [disabled]="busyAction"><span>Generar turno</span><span class="button-arrow">→</span></button></aside>
       <article class="queue-card operator-queue"><div class="queue-header"><div><div class="ticket-eyebrow">SIGUIENTES TURNOS</div><h3>Fila en espera</h3></div><span class="queue-count">{{ waitingTickets.length }}</span></div><div class="queue-list" *ngIf="waitingTickets.length; else emptyQueue"><div class="queue-row" *ngFor="let ticket of waitingTickets; let first = first"><span class="queue-position" [class.queue-current]="first">{{ first ? 'SIG.' : 'EN FILA' }}</span><strong>{{ ticket.code }}</strong><span class="queue-time">{{ formatTime(ticket.createdAt) }}</span></div></div><ng-template #emptyQueue><div class="queue-empty"><span>✓</span><strong>Fila despejada</strong><small>No hay turnos en espera</small></div></ng-template><div class="queue-footer"><span class="status-pulse"></span> Turnos actualizados automáticamente</div></article>
-    </section>
-
-    <div class="notice" *ngIf="notice" role="status"><span>✓</span>{{ notice }}<button (click)="notice = ''" aria-label="Cerrar">×</button></div>
-    <div class="loading" *ngIf="loading">Conectando con la sucursal…</div>
+    </ng-container>
+    <ng-template #operatorView>
+      <div class="section-heading"><div><div class="eyebrow">PANEL DE OPERACIÓN</div><h2>¿Quién está siendo atendido?</h2></div><span class="updated">Estimado: {{ averageServiceMinutes }} min por atención</span></div>
+      <section class="operator-counter-grid" aria-label="Control de las cuatro mesas"><article class="operator-counter" *ngFor="let counter of dashboard.counters" [class.operator-counter-busy]="counter.status === 'busy'"><div class="counter-head"><span class="counter-number">{{ counter.name | uppercase }}</span><span class="availability" [class.available]="counter.status === 'available'"><i></i>{{ counter.status === 'available' ? 'Disponible' : 'Ocupada' }}</span></div><div class="operator-ticket-label">{{ counter.ticket ? 'ATENDIENDO EL TURNO' : 'LISTA PARA ATENDER' }}</div><strong class="operator-ticket">{{ counter.ticket?.code || '—' }}</strong><div class="operator-eta"><span>Espera estimada</span><strong>{{ estimatedWait(counter) === 0 ? 'Sin espera' : '≈ ' + estimatedWait(counter) + ' min' }}</strong></div><button class="counter-action" *ngIf="counter.status === 'available' && waitingTickets.length" (click)="callNext(counter)" [disabled]="busyAction"><span>›</span> Llamar siguiente turno</button><button class="counter-action finish-action" *ngIf="counter.status === 'busy'" (click)="finish(counter)" [disabled]="busyAction"><span>✓</span> Finalizar atención</button></article></section>
+      <article class="queue-card operator-queue"><div class="queue-header"><div><div class="ticket-eyebrow">SIGUIENTES TURNOS</div><h3>Fila en espera</h3></div><span class="queue-count">{{ waitingTickets.length }}</span></div><div class="queue-list" *ngIf="waitingTickets.length; else operatorEmpty"><div class="queue-row" *ngFor="let ticket of waitingTickets; let first = first"><span class="queue-position" [class.queue-current]="first">{{ first ? 'SIG.' : 'EN FILA' }}</span><strong>{{ ticket.code }}</strong><span class="queue-time">{{ formatTime(ticket.createdAt) }}</span></div></div><ng-template #operatorEmpty><div class="queue-empty"><span>✓</span><strong>Fila despejada</strong><small>No hay turnos en espera</small></div></ng-template><div class="queue-footer"><span class="status-pulse"></span> Turnos actualizados automáticamente</div></article>
+    </ng-template>
+    <div class="notice" *ngIf="notice" role="status"><span>✓</span>{{ notice }}<button (click)="notice = ''" aria-label="Cerrar">×</button></div><div class="loading" *ngIf="loading">Conectando con la sucursal…</div>
   </main>
   <footer><span class="footer-brand"><span class="brand-mark small-mark">t</span> turnos<span class="brand-dot">.</span></span><span>Atención sencilla, a tu ritmo.</span><span>© {{ now | date:'yyyy' }} · Demo académica</span></footer>
 </div>
