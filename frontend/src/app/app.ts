@@ -10,7 +10,6 @@ import { Counter, Dashboard, Ticket } from './models';
   templateUrl: './app.html',
 })
 export class AppComponent implements OnInit, OnDestroy {
-  view: 'cliente' | 'operador' = 'cliente';
   readonly averageServiceMinutes = 8;
   dashboard: Dashboard = { tickets: [], counters: [], nextTicket: null, stats: { waiting: 0, served: 0, available: 0 } };
   loading = true;
@@ -29,11 +28,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   counterFor(ticket: Ticket): string {
-    return this.dashboard.counters.find(counter => counter.ticket?.id === ticket.id)?.name ?? 'la ventanilla indicada';
+    const counter = this.dashboard.counters.find(item => item.ticket?.id === ticket.id);
+    return counter ? `Mesa ${String(counter.id).padStart(2, '0')}` : 'la mesa indicada';
   }
 
   ngOnInit(): void {
-    this.view = new URLSearchParams(window.location.search).get('vista') === 'operador' ? 'operador' : 'cliente';
     this.refresh();
     this.pollId = window.setInterval(() => this.refresh(), 2500);
     this.clockId = window.setInterval(() => this.now = new Date(), 30_000);
@@ -71,7 +70,7 @@ export class AppComponent implements OnInit, OnDestroy {
   callNext(counter: Counter): void {
     this.busyAction = true;
     this.queue.callNext(counter.id).subscribe({
-      next: value => { this.dashboard = value; this.lastCalled = value.counters.find(item => item.id === counter.id)?.ticket?.code ?? this.lastCalled; this.playChime(); this.notice = `${counter.name}: pase ${this.lastCalled || 'el siguiente turno'}.`; this.busyAction = false; },
+      next: value => { this.dashboard = value; this.lastCalled = value.counters.find(item => item.id === counter.id)?.ticket?.code ?? this.lastCalled; this.playChime(); this.notice = `Mesa ${counter.id}: pase ${this.lastCalled || 'el siguiente turno'}.`; this.busyAction = false; },
       error: error => { this.notice = error.error?.error ?? 'No hay turnos disponibles.'; this.busyAction = false; },
     });
   }
@@ -79,7 +78,7 @@ export class AppComponent implements OnInit, OnDestroy {
   finish(counter: Counter): void {
     this.busyAction = true;
     this.queue.finish(counter.id).subscribe({
-      next: value => { this.dashboard = value; this.playChime(); this.notice = `${counter.name} está disponible.${value.nextTicket ? ` Pase el siguiente turno: ${value.nextTicket.code}.` : ' No hay turnos en espera.'}`; this.busyAction = false; },
+      next: value => { this.dashboard = value; this.playChime(); this.notice = `Mesa ${counter.id} está disponible.${value.nextTicket ? ` Pase el siguiente turno: ${value.nextTicket.code}.` : ' No hay turnos en espera.'}`; this.busyAction = false; },
       error: error => { this.notice = error.error?.error ?? 'No se pudo cerrar la atención.'; this.busyAction = false; },
     });
   }
