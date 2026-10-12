@@ -25,7 +25,10 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(private readonly queue: QueueService) {}
 
   get currentCall(): Ticket | null {
-    return this.dashboard.counters.find(counter => counter.ticket)?.ticket ?? null;
+    return this.dashboard.counters
+      .map(counter => counter.ticket)
+      .filter((ticket): ticket is Ticket => ticket !== null)
+      .sort((left, right) => right.id - left.id)[0] ?? null;
   }
 
   counterFor(ticket: Ticket): string {
@@ -49,7 +52,7 @@ export class AppComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.queue.getDashboard().subscribe({
       next: value => {
-        const call = value.counters.find(counter => counter.ticket)?.ticket;
+        const call = value.counters.map(counter => counter.ticket).filter((ticket): ticket is Ticket => ticket !== null).sort((left, right) => right.id - left.id)[0];
         if (call && call.code !== this.lastCalled) {
           this.lastCalled = call.code;
           if (!this.loading) this.playChime();
