@@ -10,6 +10,8 @@ import { Counter, Dashboard, Ticket } from './models';
   templateUrl: './app.html',
 })
 export class AppComponent implements OnInit, OnDestroy {
+  view: 'cliente' | 'operador' = 'cliente';
+  readonly averageServiceMinutes = 8;
   dashboard: Dashboard = { tickets: [], counters: [], nextTicket: null, stats: { waiting: 0, served: 0, available: 0 } };
   loading = true;
   busyAction = false;
@@ -31,6 +33,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.view = new URLSearchParams(window.location.search).get('vista') === 'operador' ? 'operador' : 'cliente';
     this.refresh();
     this.pollId = window.setInterval(() => this.refresh(), 2500);
     this.clockId = window.setInterval(() => this.now = new Date(), 30_000);
@@ -82,6 +85,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get waitingTickets(): Ticket[] { return this.dashboard.tickets.filter(ticket => ticket.status === 'waiting'); }
+  estimatedWait(counter: Counter): number {
+    if (counter.status === 'busy') return this.averageServiceMinutes;
+    const available = Math.max(this.dashboard.stats.available, 1);
+    return this.waitingTickets.length ? Math.ceil(this.waitingTickets.length / available) * this.averageServiceMinutes : 0;
+  }
   formatTime(value: string): string { return new Date(value).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }); }
 
   private playChime(): void {
@@ -97,3 +105,4 @@ export class AppComponent implements OnInit, OnDestroy {
     } catch { /* El navegador puede bloquear audio antes de la primera interacción. */ }
   }
 }
+
