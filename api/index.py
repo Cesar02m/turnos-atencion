@@ -75,6 +75,10 @@ def create_ticket():
         code = f"A{number:02d}"
         created = datetime.now(timezone.utc).isoformat()
         cursor = connection.execute("INSERT INTO tickets(code, created_at) VALUES (?, ?)", (code, created))
+        counter = connection.execute("SELECT * FROM counters WHERE status='available' ORDER BY id LIMIT 1").fetchone()
+        if counter:
+            connection.execute("UPDATE tickets SET status='serving', counter_id=? WHERE id=?", (counter["id"], cursor.lastrowid))
+            connection.execute("UPDATE counters SET status='busy', ticket_id=? WHERE id=?", (cursor.lastrowid, counter["id"]))
         connection.commit()
         return jsonify(ticket_dict(connection.execute("SELECT * FROM tickets WHERE id=?", (cursor.lastrowid,)).fetchone())), 201
     except sqlite3.Error:
@@ -124,6 +128,10 @@ def finish(counter_id):
             return jsonify(error="Esta ventanilla ya está disponible."), 409
         connection.execute("UPDATE tickets SET status='done', finished_at=? WHERE id=?", (datetime.now(timezone.utc).isoformat(), counter["ticket_id"]))
         connection.execute("UPDATE counters SET status='available', ticket_id=NULL WHERE id=?", (counter_id,))
+        next_ticket = connection.execute("SELECT * FROM tickets WHERE status='waiting' ORDER BY id LIMIT 1").fetchone()
+        if next_ticket:
+            connection.execute("UPDATE tickets SET status='serving', counter_id=? WHERE id=?", (counter_id, next_ticket["id"]))
+            connection.execute("UPDATE counters SET status='busy', ticket_id=? WHERE id=?", (next_ticket["id"], counter_id))
         connection.commit()
         return jsonify(dashboard(connection))
     except sqlite3.Error:
@@ -136,3 +144,4 @@ def finish(counter_id):
 @app.get("/api/health")
 def health():
     return jsonify(status="ok", service="turnos-atencion")
+
