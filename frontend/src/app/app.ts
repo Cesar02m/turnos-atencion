@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { QueueService } from './queue.service';
 import { Counter, Dashboard, Ticket } from './models';
@@ -7,7 +6,7 @@ import { Counter, Dashboard, Ticket } from './models';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule],
   templateUrl: './app.html',
 })
 export class AppComponent implements OnInit, OnDestroy {
