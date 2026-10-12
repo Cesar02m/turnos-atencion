@@ -5,11 +5,12 @@ Demo académica de una fila de atención con backend Flask y frontend Angular. L
 ## Funciones
 
 - Generar turnos secuenciales (`A01`, `A02`, …).
-- Asignar el siguiente turno a cualquiera de las cuatro ventanillas disponibles.
+- Asignar automáticamente cada turno nuevo a la primera ventanilla disponible; si las cuatro están ocupadas, conservarlo en la fila.
 - Marcar una ventanilla como ocupada durante la atención y liberarla al finalizar.
 - Mostrar la fila y el turno llamado en una pantalla que se actualiza cada 2.5 segundos.
-- Mostrar en una sola vista el turno llamado y su mesa asignada, la disponibilidad y ocupación de las cuatro mesas, la fila de espera, las esperas estimadas y los controles para llamar o finalizar turnos.
-- Al finalizar una atención, liberar la mesa, anunciar el siguiente turno en espera y reproducir un sonido.
+- Mostrar una pantalla pública con el turno llamado, las mesas disponibles u ocupadas, la fila y el botón para generar turno.
+- Mostrar una vista de atención separada con las cuatro mesas, el turno que atiende cada una y los controles para finalizar la atención.
+- Al finalizar una atención, asignar a esa mesa el turno más antiguo en espera y reproducir un sonido.
 - Calcular la espera estimada usando un promedio inicial de 8 minutos por atención; el valor se puede ajustar en `frontend/src/app/app.ts`.
 - Reproducir un tono cuando se llama a un turno (el navegador puede requerir una primera interacción para habilitar sonido).
 
@@ -27,5 +28,5 @@ El proyecto incluye `vercel.json` para compilar Angular y enrutar `/api/*` al ba
 
 ## Uso
 
-Abre la página en una pantalla para observar el panel. Desde la misma interfaz puedes generar turnos y operar las cuatro ventanillas. El estado se comparte mediante la API mientras corre el mismo proceso con su base de datos.
+Abre `/?vista=cliente` para la pantalla pública o `/?vista=mesas` para operar las cuatro ventanillas. El estado se comparte mediante la API mientras corre el mismo proceso con su base de datos.
 
